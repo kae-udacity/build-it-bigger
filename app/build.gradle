@@ -3,7 +3,6 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     buildToolsVersion "26.0.2"
-
     defaultConfig {
         applicationId "com.udacity.gradle.builditbigger"
         minSdkVersion 16
@@ -19,16 +18,41 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions 'version'
+    productFlavors {
+        free {
+            dimension 'version'
+            applicationId 'com.udacity.gradle.builditbigger.free'
+        }
+        paid {
+            dimension 'version'
+            applicationId 'com.udacity.gradle.builditbigger.paid'
+        }
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestCompile('com.android.support.test.espresso:espresso-core:3.0.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    compile 'com.android.support.test.espresso:espresso-idling-resource:3.0.1'
     compile 'com.android.support:appcompat-v7:27.0.2'
-    compile 'com.google.android.gms:play-services-ads:11.8.0'
+    freeCompile 'com.google.android.gms:play-services-ads:11.8.0'
     compile 'com.google.code.findbugs:jsr305:3.0.1'
     compile project(':jokeandroidlibrary')
     compile project(path: ':backend', configuration: 'android-endpoints')
 }
+
+task executeTests {
+    dependsOn ':backend:appengineRun'
+    project(':backend').afterEvaluate { backend ->
+        backend.extensions.appengine.daemon = true
+    }
+    doLast {
+        connectedCheck
+    }
+}
+
+executeTests.finalizedBy ':backend:appengineStop'
